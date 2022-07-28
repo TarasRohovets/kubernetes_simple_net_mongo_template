@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: api
-        image: api
+        image: api:dev
         ports:
         - containerPort: 8081
         env:
