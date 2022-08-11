@@ -1,5 +1,8 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Api.Models;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
+using MongoDB.Driver;
 
 namespace Api.Controllers
 {
@@ -7,21 +10,29 @@ namespace Api.Controllers
     [ApiController]
     public class DocumentController : ControllerBase
     {
-        public DocumentController()
+        private readonly IMongoCollection<Document> _collection;
+        private readonly MongoConnectionAppSettings _settings;
+        private readonly string CollectionName = "Documents";
+        public DocumentController(IOptions<MongoConnectionAppSettings> settings)
         {
-
+            _settings = settings.Value;
+            var client = new MongoClient(_settings.ConnectionString);
+            var database = client.GetDatabase(_settings.DatabaseName);
+            _collection = database.GetCollection<Document>(CollectionName);
         }
 
-        [HttpGet("getDocument")]
-        public async Task<IActionResult> GetDocument()
+        [HttpGet("getDocument/id")]
+        public async Task<IActionResult> GetDocument(string id)
         {
-            return Ok();
+            var result = await _collection.Find<Document>(c => c.Id == id).FirstOrDefaultAsync();
+            return Ok(result);
         }
 
         [HttpPost("postDocument")]
-        public async Task<IActionResult> PostDocument()
+        public async Task<IActionResult> PostDocument(Document doc)
         {
-            return Ok();
+            await _collection.InsertOneAsync(doc);
+            return Ok(doc);
         }
     }
 }
